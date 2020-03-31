@@ -1,4 +1,4 @@
-module Types
+module Types::Objects
   class UserType < BaseObject
     description "User Type"
 
