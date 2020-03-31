@@ -5,7 +5,7 @@ module Mutations
     argument        :email, String, required: true
     argument        :password, String, required: true
 
-    field           :auth_result, Types::AuthResultType, null: true
+    field           :auth_result, Types::Objects::AuthResultType, null: true
     field           :uid, String, null: false
 
     def resolve(email: nil, password: nil)

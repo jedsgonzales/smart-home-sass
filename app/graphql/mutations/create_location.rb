@@ -7,7 +7,7 @@ module Mutations
     argument :parent_location, Integer, required: true
 
     # return type from the mutation
-    type Types::LocationType
+    type Types::Objects::LocationType
 
     def resolve(location_name: nil, location_type: nil, description: nil, parent_location: nil)
       Location.create!(
