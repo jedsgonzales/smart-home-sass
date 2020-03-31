@@ -5,5 +5,5 @@ A base application template for GraphQL app. This project contains some starting
 Ruby: 2.6.3
 Rails: 6.0.1
 
-Database: MySQL
+Database: PostgreSQL
 
