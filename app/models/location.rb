@@ -6,6 +6,7 @@ class Location < ApplicationRecord
 
 	has_many :sublocation, :class_name => "Location", :foreign_key => "parent_location", dependent: :destroy
   has_many :control_devices, dependent: :nullify
+  has_many :control_nodes, dependent: :nullify
 
   enum location_types: { area: 0, unit: 1  }
 
