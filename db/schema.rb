@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_19_044802) do
+ActiveRecord::Schema.define(version: 2020_14_04_173908) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -47,8 +47,8 @@ ActiveRecord::Schema.define(version: 2020_03_19_044802) do
 
   create_table "control_nodes", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "device_id", null: false
+    t.uuid "node_profile_id", null: false
     t.string "details"
-    t.integer "control_channel", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
@@ -58,6 +58,7 @@ ActiveRecord::Schema.define(version: 2020_03_19_044802) do
     t.integer "location_type"
     t.string "description"
     t.uuid "parent_location"
+    t.uuid "organization_id"
     t.bigint "user_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
@@ -67,13 +68,14 @@ ActiveRecord::Schema.define(version: 2020_03_19_044802) do
   create_table "node_statuses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "node_id", null: false
     t.string "name", null: false
-    t.binary "value"
+    t.string "value"
+    t.string "type"
   end
 
   create_table "organizations", force: :cascade do |t|
     t.string "name", null: false
     t.string "short_name", default: ""
-    t.string "details", default: ""
+    t.text "details", default: ""
     t.string "site_url", default: ""
     t.string "address", default: ""
     t.string "contact_details"
@@ -121,6 +123,7 @@ ActiveRecord::Schema.define(version: 2020_03_19_044802) do
     t.text "tokens"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.bigint "system_role", default: 0
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true

@@ -1,3 +1,5 @@
+require 'concerns/acl/user'
+
 class User < ApplicationRecord
   default_scope -> { order("created_at DESC") }
 
@@ -6,8 +8,7 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :trackable, :validatable
 
-  include DeviseTokenAuth::Concerns::User
-  include UserAcl
+  include DeviseTokenAuth::Concerns::User, Concerns::Acl::User
 
   enum status: {
     unverified: 0,
@@ -45,14 +46,14 @@ class User < ApplicationRecord
     if self.organizations.empty? && organization_id.empty?
       # return user created locations
       return parent_id.present? ?
-        self.locations.includes(:main_locations. :node_locations).where(parent_location: parent_id) : self.locations.includes(:main_locations. :node_locations)
+        self.locations.includes(:main_locations, :node_locations).where(parent_location: parent_id) : self.locations.includes(:main_locations, :node_locations)
 
     else
       all_locations = []
 
       org_subjects = organization_id.empty? ?
-        self.organizations.includes(:main_locations. :node_locations) :
-        self.organizations.includes(:main_locations. :node_locations).where(id: organization_id)
+        self.organizations.includes(:main_locations, :node_locations) :
+        self.organizations.includes(:main_locations, :node_locations).where(id: organization_id)
 
       org_subjects.each do |organization|
         if parent_id.present?

@@ -1,5 +1,5 @@
 module Types::Objects
-  class LocationType < BaseObject
+  class LocationType < Types::BaseObject
     field :id, ID, null: false
     field :location_name, String, null: false
     field :location_type, Integer, null: false

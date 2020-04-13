@@ -2,7 +2,7 @@ module Mutations
   class UpdateLocation < BaseMutation
     # TODO: define return fields
     # field :post, Types::PostType, null: false
-    field :location, type Types::Objects::LocationType, null: true
+    field :location, Types::Objects::LocationType, null: true
     field :errors, String, null: false
 
 

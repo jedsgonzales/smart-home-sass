@@ -1,7 +1,7 @@
 module Mutations
   class DeleteLocation < BaseMutation
     # TODO: define return fields
-    field :location, type Types::Objects::LocationType, null: false
+    field :location, Types::Objects::LocationType, null: false
     field :result, Boolean, null: true
 
     # TODO: define arguments

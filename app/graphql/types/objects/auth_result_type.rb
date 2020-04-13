@@ -1,5 +1,5 @@
 module Types::Objects
-  class AuthResultType < BaseObject
+  class AuthResultType < Types::BaseObject
     description "User Auth Result"
 
     field       :client, String, null: false
