@@ -5,6 +5,7 @@ class Location < ApplicationRecord
 
 	belongs_to :parent, :class_name =>  "Location", foreign_key: :parent_location, required: false
   belongs_to :organization, required: false
+  belongs_to :user, required: false
 
   has_many :control_devices, dependent: :nullify
   has_many :control_nodes, dependent: :nullify
