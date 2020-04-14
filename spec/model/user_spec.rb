@@ -8,7 +8,7 @@ RSpec.describe User, :type => :model do
 
   context "ACL Module" do
     it "can respond to acl methods" do
-      expect( @admin.respond_to?(:can_view_other_users?) ).to be true
+      expect( @admin.respond_to?( :can_view_other_users? ) ).to be true
     end
 
     it "can respond to generic acl method" do
@@ -18,8 +18,8 @@ RSpec.describe User, :type => :model do
 
   context "Standard User Rights" do
     it "cannot perform all sorts of rights" do
-      UserAcl::ACL.each do |perm_act, mask_shift|
-        UserAcl::BASE_ACL.each do |perm_scope, perm_sections|
+      Concerns::Acl::User::ACL.each do |perm_act, mask_shift|
+        Concerns::Acl::User::BASE_ACL.each do |perm_scope, perm_sections|
           perm_sections.each do |perm_section, perm_bits|
             expect( @user.send("can_#{perm_act}_#{perm_scope}_#{perm_section}?") ).to be false
           end
@@ -30,8 +30,8 @@ RSpec.describe User, :type => :model do
 
   context "Admin Rights" do
     it "can perform all sorts of rights" do
-      UserAcl::ACL.each do |perm_act, mask_shift|
-        UserAcl::BASE_ACL.each do |perm_scope, perm_sections|
+      Concerns::Acl::User::ACL.each do |perm_act, mask_shift|
+        Concerns::Acl::User::BASE_ACL.each do |perm_scope, perm_sections|
           perm_sections.each do |perm_section, perm_bits|
             expect( @admin.send("can_#{perm_act}_#{perm_scope}_#{perm_section}?") ).to be true
           end

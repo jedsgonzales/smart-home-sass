@@ -11,6 +11,8 @@ class GraphqlController < DeviseTokenAuth::ApplicationController
   before_action :set_user_by_token
 
   def execute
+    Rails.logger.debug "GRAPHQL current_user = #{current_user.inspect}"
+
     variables = ensure_hash(params[:variables])
     query = params[:query]
     operation_name = params[:operationName]

@@ -24,15 +24,11 @@ RSpec.describe Types::MutationType do
       end
 
       it "should return token string" do
-        puts "result #{result}"
-
         # pre-parse response
         token_hash = result.dig("data", "authUser", "authResult", "token")
         client_id = result.dig("data", "authUser", "authResult", "client")
 
-        first_user = User.first
-
-        puts "1st user #{first_user.inspect}"
+        first_user = User.where(email: users.first.email).take
 
         expect( BCrypt::Password.new( first_user.tokens[client_id]['token'] ).is_password?(token_hash) ).to be true
       end

@@ -24,81 +24,86 @@ module Concerns
 
       included do
         attr_accessor :permission_check_cache
-      end
 
-      # respond to methods named for acl access
-      # e.g. can_view_other_users?
-      def method_missing(m, args, &block)
-        if respond_to?(:permission) && self.permission.is_a?(Numeric)
-          # only do this if current instance has numeric permission property responder
+        # respond to methods named for acl access
+        # e.g. can_view_other_users?
+        def method_missing(m, args = nil, &block)
+          if respond_to?(:system_role) && self.system_role.is_a?(Numeric)
+            # only do this if current instance has numeric permission property responder
 
-          result = false
+            result = false
 
-          # inititalize if we haven't
-          permission_check_cache ||= {}.with_indifferent_access
+            # inititalize if we haven't
+            permission_check_cache ||= {}.with_indifferent_access
 
-          # check if already evaluated
-          if permission_check_cache.has_key?(m)
-            result = permission_check_cache[m]
-          else
-            keys = m.split('_')
+            # check if already evaluated
+            if permission_check_cache.has_key?(m)
+              result = permission_check_cache[m]
+            else
+              keys = m.to_s.split('_')
 
-            if keys.first == 'can' && keys.last.end_with?('?')
-              keys.shift # removed `can` word
-              keys[keys.size - 1] = keys.last.sub(/\?/, '') # remove `?` from last word
+              if keys.first == 'can' && keys.last.end_with?('?')
+                keys.shift # removed `can` word
+                keys[keys.size - 1] = keys.last.sub(/\?/, '') # remove `?` from last word
 
-              base = keys.shift
-              permission_check_cache[m] = check_permission(base, keys)
+                base = keys.shift
+                result = permission_check_cache[m] = check_permission(base, keys)
+              end
             end
-          end
 
-          if block_given?
-            block.call result
+            if block_given?
+              block.call result
+            else
+              result
+            end
+
           else
-            result
+            super # delegate
           end
 
-        else
-          super # delegate
         end
 
-      end
+        def respond_to_missing?(method_name, include_private = false)
+          Rails.logger.debug "ACL respond_to_missing #{method_name.to_s}"
 
-      def respond_to_missing?(method_name, include_private = false)
-        keys = method_name.to_s.split('_')
+          keys = method_name.to_s.split('_')
 
-        if keys.first == 'can' && keys.last.end_with?('?')
-          keys.shift # removed `can` word
-          keys[keys.size - 1] = keys.last.sub(/\?/, '') # remove `?` from last word
+          if keys.first == 'can' && keys.last.end_with?('?')
+            keys.shift # removed `can` word
+            keys[keys.size - 1] = keys.last.sub(/\?/, '') # remove `?` from last word
 
-          base = UserAcl::ACL[keys.shift]
-          perm = UserAcl::BASE_ACL[keys.shift]
-          while keys.size > 0 && !perm.nil?
-            perm = perm[keys.shift]
+            base = ACL[keys.shift]
+            perm = BASE_ACL[keys.shift]
+            while keys.size > 0 && !perm.nil?
+              perm = perm[keys.shift]
+            end
+
+            !perm.nil?
+          else
+            super
+          end
+        end
+
+        # can?('view_other_users')
+        def can?(act_str)
+          perm_accessor = "can_#{acl_str.to_s}?"
+          if permission_check_cache.has_key?(perm_accessor)
+            permission_check_cache[perm_accessor]
+          else
+            eval(perm_accessor)
           end
 
-          perks_val.nil?
-        else
-          super
         end
-      end
-
-      # can?('view_other_users')
-      def can?(act_str)
-        perm_accessor = "can_#{acl_str.to_s}?"
-        if permission_check_cache.has_key?(perm_accessor)
-          permission_check_cache[perm_accessor]
-        else
-          eval(perm_accessor)
-        end
-
       end
 
       protected
       def check_permission(base, keys)
-        placement = UserAcl::ACL[base]
+        #Rails.logger.debug "ACL check_permission #{base} #{keys}"
+        #Rails.logger.debug "ACL system_role #{self.system_role}"
 
-        perks_val = UserAcl::BASE_ACL[keys.shift]
+        placement = ACL[base]
+
+        perks_val = BASE_ACL[keys.shift]
         while keys.size > 0 && !perks_val.nil?
           perks_val = perks_val[keys.shift]
         end
@@ -107,7 +112,11 @@ module Concerns
           false
         else
           target_permission = perks_val << placement
-          (target_permission & self.permission) == target_permission
+
+          #Rails.logger.debug "ACL target_permission #{target_permission}"
+          #Rails.logger.debug "ACL result #{(target_permission & self.system_role)}"
+
+          (target_permission & self.system_role) == target_permission
         end
 
       end

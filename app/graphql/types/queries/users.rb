@@ -12,9 +12,9 @@ module Types::Queries
       if context[:current_user].can_view_other_users?
 
         if organization_id.nil?
-          User.include(:user_roles).where(user_roles: { organization_id: organization_id })
-        else
           User.all
+        else
+          User.includes(:user_roles).where(user_roles: { organization_id: organization_id })
         end
 
       else

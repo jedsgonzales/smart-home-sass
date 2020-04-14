@@ -4,6 +4,7 @@ module Mutations
 
     argument        :email, String, required: true
     argument        :password, String, required: true
+    argument        :test, Boolean, required: false
 
     field           :auth_result, Types::Objects::AuthResultType, null: true
     field           :uid, String, null: false

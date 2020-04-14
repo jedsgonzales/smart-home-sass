@@ -3,7 +3,8 @@ require "rails_helper"
 RSpec.describe "List Users", :type => :request do
   before(:all) do
     @users = create_pair(:user)
-    @auth_result = GraphqlAppSchema.execute( login(email: @users.first.email, password: @users.first.password) ).as_json
+    @admin = create(:admin_user)
+    @auth_result = GraphqlAppSchema.execute( login(email: @admin.email, password: @admin.password) ).as_json
   end
 
   context "user listing" do
@@ -25,7 +26,7 @@ RSpec.describe "List Users", :type => :request do
       post "/graphql", params: { query: list_users_query }, headers: headers
       json = JSON.parse(response.body)
 
-      expect(json.dig("data", "listUsers").size).to eq(2)
+      expect( json.dig("data", "users").size ).to eq(3)
     end
   end
 
@@ -47,7 +48,7 @@ RSpec.describe "List Users", :type => :request do
   def list_users_query
     <<~GQL
       query {
-        listUsers () {
+        users {
           id
           fullName
           nickName
