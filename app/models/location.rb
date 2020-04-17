@@ -17,8 +17,9 @@ class Location < ApplicationRecord
 
 	validates_uniqueness_of :location_name, scope: [:location_type, :parent_location], :case_sensitive => false, message: "already exist!"
 
-  private
   def add_organization_to_sub_location(sub_location)
-    sub_location.organization = self.organization unless self.organization.nil?
+    unless self.organization.nil?
+      sub_location.organization = self.organization
+    end
   end
 end

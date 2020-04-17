@@ -5,9 +5,7 @@ module Types::Queries
     type [Types::Objects::UserType], null: false
 
     def resolve(organization_id: nil)
-      if context[:current_user].nil?
-        raise GraphQL::ExecutionError, "CREDS_INVALID"
-      end
+      auth_checkpoint
 
       if context[:current_user].can_view_other_users?
 
@@ -18,7 +16,7 @@ module Types::Queries
         end
 
       else
-        raise GraphQL::ExecutionError, "INSUFFICIENT_PRIVILEDGE"
+        deny_access
       end
 
 

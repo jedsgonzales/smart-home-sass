@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_14_04_173908) do
+ActiveRecord::Schema.define(version: 2020_14_04_173909) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -47,10 +47,11 @@ ActiveRecord::Schema.define(version: 2020_14_04_173908) do
 
   create_table "control_nodes", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "device_id", null: false
-    t.uuid "node_profile_id", null: false
     t.string "details"
+    t.integer "control_channel", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.uuid "location_id"
   end
 
   create_table "locations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -58,7 +59,6 @@ ActiveRecord::Schema.define(version: 2020_14_04_173908) do
     t.integer "location_type"
     t.string "description"
     t.uuid "parent_location"
-    t.uuid "organization_id"
     t.bigint "user_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
@@ -68,14 +68,13 @@ ActiveRecord::Schema.define(version: 2020_14_04_173908) do
   create_table "node_statuses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "node_id", null: false
     t.string "name", null: false
-    t.string "value"
-    t.string "type"
+    t.binary "value"
   end
 
   create_table "organizations", force: :cascade do |t|
     t.string "name", null: false
     t.string "short_name", default: ""
-    t.text "details", default: ""
+    t.string "details", default: ""
     t.string "site_url", default: ""
     t.string "address", default: ""
     t.string "contact_details"

@@ -2,18 +2,14 @@ require 'concerns/acl/base_acl'
 
 module Concerns
   module Acl
-    module User
+    module UserRole
       include Concerns::Acl::BaseAcl
 
       BASE_ACL = {
-        other: {
-          users: 1,
-          locations: 2,
-          organizations: 4
-        },
         organization: {
-          users: 8,
-          locations: 16
+          instance: 1,
+          users: 2,
+          locations: 4
         }
       }.with_indifferent_access
 
@@ -27,7 +23,7 @@ module Concerns
 
       def self.included(base)
         base.extend Concerns::Acl::BaseAclClassMethod
-        base.setup_acl action_acl: Concerns::Acl::User::ACL, scope_acl: Concerns::Acl::User::BASE_ACL
+        base.setup_acl action_acl: Concerns::Acl::UserRole::ACL, scope_acl: Concerns::Acl::UserRole::BASE_ACL
       end
     end
 

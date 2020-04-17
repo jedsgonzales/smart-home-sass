@@ -10,7 +10,7 @@ module Mutations
     field           :uid, String, null: false
 
     def resolve(email: nil, password: nil)
-      user = User.find_by_email(email)
+      user = User.find_by(email: email, status: User.statuses[:active])
 
       if user.present? && user.valid_password?(password)
         # check if user already logged, return the old client token

@@ -1,3 +1,5 @@
+require 'concerns/acl/graphql'
+
 module Mutations
   #class BaseMutation < GraphQL::Schema::RelayClassicMutation
   #  argument_class Types::BaseArgument
@@ -7,6 +9,7 @@ module Mutations
   #end
 
   class BaseMutation < GraphQL::Schema::Mutation
+    include Concerns::Acl::Graphql
     null false
   end
 end

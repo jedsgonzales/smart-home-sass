@@ -17,5 +17,9 @@ FactoryBot.define do
     factory :admin_user do
       system_role { 0x0fffffffffffffff }
     end
+
+    factory :banned_user do
+      status { User.statuses[:suspended] }
+    end
   end
 end

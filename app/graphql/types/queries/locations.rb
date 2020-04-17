@@ -7,9 +7,7 @@ module Types::Queries
     type [Types::Objects::LocationType], null: true
 
     def resolve(user_id: nil, organization_id: nil, parent_id: nil)
-      if context[:current_user].nil?
-        raise GraphQL::ExecutionError, "CREDS_INVALID"
-      end
+      auth_checkpoint
 
       # is querying owned locations ?
       if user_id.nil? || context[:current_user].id == user_id
@@ -29,7 +27,7 @@ module Types::Queries
           end
 
         else
-          raise GraphQL::ExecutionError, "INSUFFICIENT_PRIVILEDGE"
+          deny_access
         end
 
       end

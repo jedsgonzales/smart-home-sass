@@ -7,20 +7,31 @@ module Mutations
     argument :id, ID, required: true
     argument :organization_id, ID, required: false
 
-    def resolve(id:, organization_id: nil)
+    def resolve(id:)
+      auth_checkpoint
 
-      raise GraphQL::ExecutionError, "LOCATION_ERROR" unless id.present? && Location.exists?(id)
-      raise GraphQL::ExecutionError, "ORGANIZATION_ERROR" unless organization_id.present? && Organization.exists?(organization_id)
+      location = Location.includes(:organization => [ {user_roles: :user} ]).find_by(id: id)
 
-      if ( context[:current_user].can_delete_other_locations? ) # absolute right
-        location = Location.destroy(id)
+      raise GraphQL::ExecutionError.new('location not found', extensions: { code: 'LOCATION_ERROR' }) if location.nil?
+
+      # bring up user_role, if present
+      user_role = location.organization.user_roles.where( user_id: context[:current_user].id ).take
+
+      if context[:current_user].can_delete_other_locations? || # absolute right
+         (location.user_id == context[:current_user].id && location.organization.nil?)  || # sole owner
+         (  location.organization.present? && # location belongs to organization
+            ( location.organization.user_id == context[:current_user].id ) || # organization is owned by current_user
+            ( user_role.present? && user_role.can_delete_organization_locations? ) # has rights to delete locations under organization
+         )
+
+        location.destroy
 
         {
           location: location,
           result: location.errors.blank?
         }
       else
-        raise GraphQL::ExecutionError, "INSUFFICIENT_PRIVILEDGE"
+        deny_access
       end
 
     end

@@ -8,15 +8,17 @@ module Mutations
     argument :organization_id, ID, required: false
 
     # return type from the mutation
-    type Types::Objects::LocationType
+    field :location, Types::Objects::LocationType, null: true
+    field :errors, [String], null: true
 
     def resolve(location_name: nil, location_type: nil, description: nil, parent_location: nil, organization_id: nil)
+      auth_checkpoint
 
-      raise GraphQL::ExecutionError, "ORGANIZATION_ERROR" unless organization_id.present? && Organization.exists?(organization_id)
+      raise GraphQL::ExecutionError.new('object not found', extensions: { code: 'ORGANIZATION_ERROR' })
 
       if ( organization_id.present? && context[:current_user].can_create_other_locations? ) # absolute right
         # check organization membership role
-        Location.create!(
+        location = Location.create!(
           location_name: location_name,
           location_type: location_type,
           description: description,
@@ -24,8 +26,13 @@ module Mutations
           organization_id: organization_id,
           user: context[:current_user]
         )
+
+        {
+          location: location,
+          errors: location.errors.full_messages.collect { |msg| msg }
+        }
       else
-        raise GraphQL::ExecutionError, "INSUFFICIENT_PRIVILEDGE"
+        deny_access
       end
     end
   end

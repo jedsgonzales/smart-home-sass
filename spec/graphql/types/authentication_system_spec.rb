@@ -3,12 +3,13 @@ require "faker"
 
 RSpec.describe Types::MutationType do
   describe "authentication system" do
-    let!(:users) { create_pair(:user) }
+    let!(:first_user) { create(:user) }
+    let!(:banned_user) { create(:banned_user) }
 
     context "when logging in with correct identification" do
       let(:login) do
         %(mutation {
-          authUser( email: "#{users.first.email}", password: "#{users.first.password}" ) {
+          authUser( email: "#{first_user.email}", password: "#{first_user.password}" ) {
             authResult {
               client
               token
@@ -24,13 +25,14 @@ RSpec.describe Types::MutationType do
       end
 
       it "should return token string" do
+        
         # pre-parse response
         token_hash = result.dig("data", "authUser", "authResult", "token")
         client_id = result.dig("data", "authUser", "authResult", "client")
 
-        first_user = User.where(email: users.first.email).take
+        user = User.where(email: first_user.email).take
 
-        expect( BCrypt::Password.new( first_user.tokens[client_id]['token'] ).is_password?(token_hash) ).to be true
+        expect( BCrypt::Password.new( user.tokens[client_id]['token'] ).is_password?(token_hash) ).to be true
       end
 
       it "should return expiry greater than current date" do
@@ -44,7 +46,7 @@ RSpec.describe Types::MutationType do
     context "when logging with incorrect identification" do
       let(:login) do
         %(mutation {
-          authUser( email: "#{users.first.email}", password: "#{Faker::String.random}") {
+          authUser( email: "#{first_user.email}", password: "#{Faker::String.random}") {
 
           }
         })
@@ -59,5 +61,29 @@ RSpec.describe Types::MutationType do
       end
 
     end
+
+    context "when logging with banned account" do
+      let(:login) do
+        %(mutation {
+          authUser( email: "#{banned_user.email}", password: "#{banned_user.password}" ) {
+            authResult {
+              client
+              token
+              expiry
+            }
+            uid
+          }
+        })
+      end
+
+      subject(:result) do
+        GraphqlAppSchema.execute(login).as_json
+      end
+
+      it "should return failure" do
+        expect(result.dig("errors").size).to be > 0
+      end
+    end
+
   end
 end
