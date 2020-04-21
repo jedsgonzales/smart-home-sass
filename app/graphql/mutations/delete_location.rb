@@ -18,7 +18,7 @@ module Mutations
       user_role = location.organization.user_roles.where( user_id: context[:current_user].id ).take
 
       if context[:current_user].can_delete_other_locations? || # absolute right
-         (location.user_id == context[:current_user].id && location.organization.nil?)  || # sole owner
+         (location.user_id == context[:current_user].id && location.organization.nil?)  || # location owner
          (  location.organization.present? && # location belongs to organization
             ( location.organization.user_id == context[:current_user].id ) || # organization is owned by current_user
             ( user_role.present? && user_role.can_delete_organization_locations? ) # has rights to delete locations under organization

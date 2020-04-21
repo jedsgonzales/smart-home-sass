@@ -20,9 +20,15 @@ module Mutations
       auth_checkpoint
 
       location = Location.includes(:organization => [ {user_roles: :user} ]).find_by(id: id)
+      organization = organization_id.present? ? Organization.includes(user_roles: [:user]).find_by(id: organization_id ) : nil
 
       raise GraphQL::ExecutionError.new('location not found', extensions: { code: 'LOCATION_ERROR' }) if location.nil?
-      raise GraphQL::ExecutionError.new('organization not found', extensions: { code: 'ORGANIZATION_ERROR' }) if organization_id.present? && !Organization.exists?(organization_id)
+      raise GraphQL::ExecutionError.new('organization not found', extensions: { code: 'ORGANIZATION_ERROR' }) if organization_id.present? && organization.nil?
+
+      # raise error if parent location organization does not match with given organization
+      if organization.present? && location.present? && (location.organization.nil? || location.organization_id != organization_id)
+        raise GraphQL::ExecutionError.new('location - organization mix up', extensions: { code: 'LOCATION_ORG_ERROR' })
+      end
 
       # bring up user_role, if present
       user_role = location.organization.user_roles.where( user_id: context[:current_user].id ).take
