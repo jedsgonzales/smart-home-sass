@@ -19,7 +19,7 @@ module Automation
         fan:  Automation::Constants::FAN_MODE.values,
       }.freeze
 
-      def self.included(base)
+      def self.extended(base)
         create_accessors(base, INFO_ATTRS, STAT_ATTRS)
         create_callbacks(base, 'Automation::Nodes::Hvac::INFO_ATTRS', 'Automation::Nodes::Hvac::STAT_ATTRS')
       end

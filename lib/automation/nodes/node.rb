@@ -10,17 +10,17 @@ module Automation
       end
 
       def create_callbacks(klass, info_attr_str, stats_attr_str)
-        if klass.ancestors.include?(ActiveRecord::Base)
-          klass.class_eval <<-METHOD
-            before_save :save_node_data
-            after_find do
-              self.load_node_data( (#{info_attr_str} + #{stats_attr_str}).keys.uniq )
-            end
-
-            after_initialize do
-              self.node_status_ref = #{stats_attr_str}
+        if klass.class.ancestors.include?(ActiveRecord::Base)
+          klass.instance_eval <<-METHOD
+            def self.before_save(node)
+              node.save_node_data
+              super
             end
           METHOD
+
+          klass.instance_eval("self.load_node_data( (#{info_attr_str} + #{stats_attr_str}.keys).uniq )")
+          klass.instance_eval("self.node_status_ref = #{stats_attr_str}")
+
         end
       end
 
@@ -30,7 +30,7 @@ module Automation
         attrs.each do |attr_key, attr_vals|
           attr = attr_key.to_s
 
-          base.class_eval <<-METHOD
+          base.instance_eval <<-METHOD
             def node_status_#{attr}=(value)
               @node_status_#{attr} = value if node_status_ref.has_key?(:#{attr}) && node_status_ref[:#{attr}].include?(value)
             end
@@ -44,7 +44,7 @@ module Automation
 
       def create_info_accessors(base, attrs)
         attrs.each do |attr|
-          base.attr_accessor "node_info_#{attr}".to_sym
+          attr_accessor "node_info_#{attr}".to_sym
         end
       end
     end

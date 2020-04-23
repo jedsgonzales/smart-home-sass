@@ -14,7 +14,7 @@ module Automation
 
       }.freeze
 
-      def self.included(base)
+      def self.extended(base)
         create_accessors(base, INFO_ATTRS, STAT_ATTRS)
         create_callbacks(base, 'Automation::Nodes::TempSensor::INFO_ATTRS', 'Automation::Nodes::TempSensor::STAT_ATTRS')
       end
