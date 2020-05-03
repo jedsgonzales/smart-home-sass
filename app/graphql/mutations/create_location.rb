@@ -28,7 +28,7 @@ module Mutations
       # bring up user_role, if present
       user_role = organization.present? ? organization.user_roles.where( user_id: context[:current_user].id ).take : nil
 
-      if context[:current_user].can_create_other_locations? || # absolute right
+      if context[:current_user].can_create_everything_here? || # absolute right
         organization.nil? && ( location.nil? || location.user_id == context[:current_user].id ) || # just creating a location under his account
         ( organization.present? &&  (
           organization.created_by == context[:current_user].id # is the owner of organization

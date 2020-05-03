@@ -8,6 +8,10 @@ module Concerns
       def deny_access(msg = 'access denied')
         raise GraphQL::ExecutionError.new(msg, extensions: { code: 'INSUFFICIENT_PRIVILEDGE' })
       end
+
+      def raise_error(msg = 'error occurred', ext_code: 'GENERAL_ERROR')
+        raise GraphQL::ExecutionError.new(msg, extensions: { code: ext_code })
+      end
     end
   end
 end

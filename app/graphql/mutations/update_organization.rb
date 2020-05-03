@@ -29,7 +29,8 @@ module Mutations
       # bring up user_role, if present
       user_role = organization.user_roles.where( user_id: context[:current_user].id ).take
 
-      if context[:current_user].can_update_other_organizations? || # absolute rights
+      if context[:current_user].can_update_system_organizations? || # absolute rights
+        context[:current_user].can_update_everything_here? || # absolute rights
         organization.created_by == context[:current_user].id || # owner of the organization
         ( user_role.present? && user_role.can_update_organization_instance? ) # user has rights to update the organization instance
 

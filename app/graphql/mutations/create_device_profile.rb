@@ -32,7 +32,7 @@ module Mutations
       {
         profile: device_profile,
         errors: device_profile.errors.full_messages.collect { |msg| msg },
-        node_errors: device_profile.control_node_profiles.collect { |cnp| cnp.errors.full_messages.collect { |msg| msg } }
+        node_errors: device_profile.control_node_profiles.collect { |cnp| cnp.errors.full_messages.collect { |msg| "Node Profile: #{msg}" } }
       }
 
     end

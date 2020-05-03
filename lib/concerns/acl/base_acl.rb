@@ -67,7 +67,7 @@ module Concerns
       end
 
       def respond_to_missing?(method_name, include_private = false)
-        Rails.logger.debug "ACL respond_to_missing #{method_name.to_s}"
+        # Rails.logger.debug "ACL respond_to_missing #{method_name.to_s}"
 
         keys = method_name.to_s.split('_')
 

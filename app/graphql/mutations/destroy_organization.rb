@@ -17,7 +17,8 @@ module Mutations
       # bring up user_role, if present
       user_role = organization.user_roles.where( user_id: context[:current_user].id ).take
 
-      if context[:current_user].can_delete_other_organizations? || # absolute right
+      if context[:current_user].can_delete_system_organizations? || # absolute right
+        context[:current_user].can_delete_everything_here? || # absolute right
         organization.created_by == context[:current_user].id || # organization owner
         ( user_role.present? && user_role.can_delete_organization_instance? ) # user has rights to delete the organization instance
 

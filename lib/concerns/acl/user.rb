@@ -6,14 +6,15 @@ module Concerns
       include Concerns::Acl::BaseAcl
 
       BASE_ACL = {
-        other: {
+        system: {
           users: 1,
-          locations: 2,
-          organizations: 4
+          organizations: 2
         },
         organization: {
-          users: 8,
-          locations: 16
+          users: 16
+        },
+        everything: {
+          here: 128
         }
       }.with_indifferent_access
 

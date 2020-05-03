@@ -8,4 +8,12 @@ class ControlDeviceProfile < ApplicationRecord
 
   validates :name, presence: true
   validates :model_code, presence: true
+  validates :model_api, presence: true
+
+  validate :validate_if_has_node_profiles
+
+  private
+  def validate_if_has_node_profiles
+    self.errors.add(:base, 'node profiles are required') if self.control_node_profiles.empty?
+  end
 end

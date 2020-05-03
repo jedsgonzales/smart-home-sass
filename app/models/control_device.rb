@@ -7,6 +7,8 @@ class ControlDevice < ApplicationRecord
 
   has_many    :control_nodes, foreign_key: :device_id, dependent: :destroy
 
+  validates :known_model_api, presence: true
+
   before_save do |device|
     device.known_code = device.control_device_profile.model_code
   end
