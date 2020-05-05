@@ -7,7 +7,7 @@ module Types::Queries
     def resolve(organization_id: nil)
       auth_checkpoint
 
-      if context[:current_user].can_view_other_users?
+      if context[:current_user].can_view_system_users?
 
         if organization_id.nil?
           User.all

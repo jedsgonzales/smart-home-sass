@@ -26,6 +26,8 @@ RSpec.describe "List Users", :type => :request do
       post "/graphql", params: { query: list_users_query }, headers: headers
       json = JSON.parse(response.body)
 
+      # puts "result is #{json.inspect}"
+
       expect( json.dig("data", "users").size ).to eq(3)
     end
   end

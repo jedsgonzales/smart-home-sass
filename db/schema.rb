@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_14_04_173909) do
+ActiveRecord::Schema.define(version: 2020_28_04_151121) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(version: 2020_14_04_173909) do
     t.bigint "user_id", default: 0
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "model_api", null: false
   end
 
   create_table "control_devices", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -33,6 +34,9 @@ ActiveRecord::Schema.define(version: 2020_14_04_173909) do
     t.bigint "user_id", default: 0
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "known_code", default: ""
+    t.string "known_model_api", null: false
+    t.json "api_model_params", null: false
   end
 
   create_table "control_node_profiles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -52,6 +56,7 @@ ActiveRecord::Schema.define(version: 2020_14_04_173909) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.uuid "location_id"
+    t.string "known_type", default: "Default"
   end
 
   create_table "locations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

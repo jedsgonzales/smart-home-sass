@@ -40,7 +40,7 @@ module Automation
 
       PACKET = {
         lead_code: [0xAA, 0xAA],
-        head_code: 'SMARTCLOUD'.to_a
+        head_code: 'SMARTCLOUD'
       }
 
       class Message
@@ -56,21 +56,23 @@ module Automation
           clean_packet = []
           excess_packet = []
 
-          excess_from = 0
+          excess_from = -1
           msg_length = 0
 
           retrieve = false
 
           contents.each_with_index do |content, index|
             # detect [ ... 0xAA, 0xAA, ... ] presence inside the contents
+
             if !retrieve &&
-                (contents[index, PACKET[:lead_code].size]) == PACKET[:lead_code] &&
+                contents[index, PACKET[:lead_code].size ] == PACKET[:lead_code] &&
                 contents[index + PACKET[:lead_code].size] != nil # can retrieve length
 
               msg_length = contents[index + PACKET[:lead_code].size]
 
               # check if given length is retrievable from contents
               if contents.size < (index + (PACKET[:lead_code].size - 1) + msg_length)
+                clean_packet = contents.dup
                 break # incomplete packet, msg_length exceeds contents size
               end
 
@@ -78,8 +80,8 @@ module Automation
             end
 
             if retrieve
-              if contents.size < (msg_length + PACKET[:lead_code].size) # watch out for size of dat we are trying to retrieve, rest will be excess
-                clean_packet.push(contents)
+              if clean_packet.size < (msg_length + PACKET[:lead_code].size) # watch out for size of dat we are trying to retrieve, rest will be excess=
+                clean_packet.push(content)
               else
                 excess_from = index
                 break # stop loop
@@ -87,49 +89,54 @@ module Automation
             end
           end #contents.each_with_index
 
-          while excess_from < contents.size
-            excess_packet.push( contents[excess_from++] )
+          unless excess_from < 0
+            while excess_from < contents.size
+              excess_packet.push( contents[excess_from] )
+              excess_from += 1
+            end
           end
 
           # compose message object from cleaned packet
           # at this points it should contain the proper
           # base structure, if not empty
           unless clean_packet.empty?
-            fld_idx = PACKET[:lead_code].size
-            message = Message.new(
-              origin_subnet: clean_packet[fld_idx + 1],
-              origin_device_id: clean_packet[fld_idx + 2],
-              origin_device_type:  clean_packet[fld_idx + 3, 2],
-              op_code: clean_packet[fld_idx + 5, 2],
-              target_subnet:  clean_packet[7],
-              target_device_id:  clean_packet[8],
-              content:  clean_packet[9..(clean_packet.size - 3)],
-              crc: clean_packet[(clean_packet.size - 2), 2]
-            )
+            if clean_packet.size == (msg_length + PACKET[:lead_code].size)
+              fld_idx = PACKET[:lead_code].size
+              message = Message.new(
+                origin_subnet: clean_packet[fld_idx + 1],
+                origin_device_id: clean_packet[fld_idx + 2],
+                origin_device_type:  clean_packet[fld_idx + 3, 2],
+                op_code: clean_packet[fld_idx + 5, 2],
+                target_subnet:  clean_packet[fld_idx + 7],
+                target_device_id:  clean_packet[fld_idx + 8],
+                content:  clean_packet[fld_idx + 9..(clean_packet.size - 3)],
+                crc: clean_packet[(clean_packet.size - 2), 2]
+              )
+            end
           end
 
           # return
-          { message: message, excess: excess_packet }
+          { message: message, excess: excess_packet, is_broken: message.nil? && clean_packet.any?, buffer: clean_packet }
         end
 
         # utility for calculating CRCs
         def self.calculate_crc(packets:)
-          crc = 0
-          dat = 0
+          crc = 0 # word
+          dat = 0 # byte
 
-          packets.each do |packet|
-            dat = crc >> 8
-            crc = crc << 8
+          packets.each do |data|
+            dat = (crc >> 8) & 0xFF
+            crc = (crc << 8) & 0xFFFF
 
-            crc = crc ^ CRC_TAB[dat ^ packet]
+            crc = (crc ^ CRC_TAB[dat ^ data]) & 0xFFFF
           end
 
-          [(crc >> 8) && 0xFF, crc & 0xFF]
+          crc.digits(256).reverse
         end
 
         # utility for verifying CRCs
         def self.verify_crc(packets:, crc_bytes:)
-          result_crc = calculate_crc(packets)
+          result_crc = self.calculate_crc(packets: packets)
           crc_bytes.first == result_crc.first && crc_bytes.last == result_crc.last
         end
 
@@ -155,12 +162,15 @@ module Automation
           crc: nil )
 
           @origin_subnet = origin_subnet
-          @origin_device_type = origin_device_type.kind_of?(Array) ? ((origin_device_type.first << 8) | origin_device_type.last) : origin_device_type
+          @origin_device_type = origin_device_type.kind_of?(Numeric) ? origin_device_type.digits(256).reverse : origin_device_type
           @origin_device_id = origin_device_id
-          @op_code = op_code.kind_of?(Array) ? ((op_code.first << 8) | op_code.last) : op_code
+          @op_code = op_code.kind_of?(Numeric) ? op_code.digits(256).reverse : op_code
           @target_subnet = target_subnet
           @target_device_id = target_device_id
           @content = content
+
+          @origin_device_type.unshift(0) if @origin_device_type.size == 1
+          @op_code.unshift(0) if @op_code.size == 1
 
           # 1 from length byte
           # 2 from crc bytes
@@ -168,11 +178,11 @@ module Automation
 
           # calculate crc's
           if crc.nil?
-            @crc = calculate_crc(packets: self.raw)
+            @crc = Message.calculate_crc(packets: self.raw)
             @is_valid = true
           else
             @crc = crc.kind_of?(Array) ? crc : [0, 0]
-            @is_valid = verify_crc(packets: self.raw, crc_bytes: @crc)
+            @is_valid = Message.verify_crc(packets: self.raw, crc_bytes: @crc)
           end
 
         end
@@ -184,36 +194,23 @@ module Automation
         # returns array of int values representing the bytes of packet
         def complete
           PACKET[:lead_code] +
-            self.length.digits(16).reverse +
-            self.origin_subnet.digits(16).reverse +
-            self.origin_device_type.digits(16).reverse +
-            self.origin_device_id.digits(16).reverse +
-            self.op_code.digits(16).reverse +
-            self.target_subnet.digits(16).reverse +
-            self.target_device_id.digits(16).reverse +
-            self.content + # this should already be the ordered bytes
+            self.raw +
             self.crc
         end
 
         def raw
-            self.length.digits(16).reverse +
-            self.origin_subnet.digits(16).reverse +
-            self.origin_device_type.digits(16).reverse +
-            self.origin_device_id.digits(16).reverse +
-            self.op_code.digits(16).reverse +
-            self.target_subnet.digits(16).reverse +
-            self.target_device_id.digits(16).reverse +
-            self.content + # this should already be the ordered bytes
+            self.length.digits(256).reverse +
+            self.pure
         end
 
         def pure
-            self.origin_subnet.digits(16).reverse +
-            self.origin_device_type.digits(16).reverse +
-            self.origin_device_id.digits(16).reverse +
-            self.op_code.digits(16).reverse +
-            self.target_subnet.digits(16).reverse +
-            self.target_device_id.digits(16).reverse +
-            self.content + # this should already be the ordered bytes
+            self.origin_subnet.digits(256).reverse +
+            self.origin_device_id.digits(256).reverse +
+            self.origin_device_type +
+            self.op_code +
+            self.target_subnet.digits(256).reverse +
+            self.target_device_id.digits(256).reverse +
+            self.content # this should already be the ordered bytes
         end
 
         def to_str

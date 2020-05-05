@@ -1,3 +1,9 @@
+require 'automation/nodes/hvac'
+require 'automation/nodes/switch'
+require 'automation/nodes/temp_sensor'
+require 'automation/nodes/var_volt_control'
+require 'automation/nodes/vav'
+
 module Automation
   module NodeList
     MAP = {
