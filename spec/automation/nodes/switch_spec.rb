@@ -5,6 +5,10 @@ RSpec.describe Automation::Nodes::Switch do
   describe 'class inclusion' do
     sw = ControlNode.new.send(:extend, Automation::Nodes::Switch)
 
+    it 'becomes an instance of extended nodule' do
+      expect( sw.is_a? Automation::Nodes::Switch ).to be true
+    end
+
     it 'will contain switch info parameters as reader methods' do
       Automation::Nodes::Switch::INFO_ATTRS.each do |info_attr|
         expect( sw.respond_to?("node_info_#{info_attr}".to_sym ) ).to be true

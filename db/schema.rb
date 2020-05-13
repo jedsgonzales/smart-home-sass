@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_28_04_151121) do
+ActiveRecord::Schema.define(version: 2020_28_04_151124) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "pgcrypto"
@@ -37,11 +37,21 @@ ActiveRecord::Schema.define(version: 2020_28_04_151121) do
     t.string "known_code", default: ""
     t.string "known_model_api", null: false
     t.json "api_model_params", null: false
+    t.uuid "control_gateway_id", null: false
+  end
+
+  create_table "control_gateways", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "description"
+    t.string "ip_address"
+    t.string "subnet_mask"
+    t.string "comm_type"
+    t.integer "port"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
   end
 
   create_table "control_node_profiles", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "description", default: ""
-    t.integer "control_channel", null: false
     t.string "node_type", null: false
     t.uuid "profile_id", null: false
     t.bigint "user_id", default: 0
@@ -51,12 +61,13 @@ ActiveRecord::Schema.define(version: 2020_28_04_151121) do
 
   create_table "control_nodes", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "device_id", null: false
+    t.uuid "node_profile_id", null: false
     t.string "details"
-    t.integer "control_channel", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.uuid "location_id"
     t.string "known_type", default: "Default"
+    t.integer "control_channel", null: false
   end
 
   create_table "locations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -64,6 +75,7 @@ ActiveRecord::Schema.define(version: 2020_28_04_151121) do
     t.integer "location_type"
     t.string "description"
     t.uuid "parent_location"
+    t.uuid "organization_id"
     t.bigint "user_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
@@ -73,13 +85,14 @@ ActiveRecord::Schema.define(version: 2020_28_04_151121) do
   create_table "node_statuses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "node_id", null: false
     t.string "name", null: false
-    t.binary "value"
+    t.string "value"
+    t.string "type"
   end
 
   create_table "organizations", force: :cascade do |t|
     t.string "name", null: false
     t.string "short_name", default: ""
-    t.string "details", default: ""
+    t.text "details", default: ""
     t.string "site_url", default: ""
     t.string "address", default: ""
     t.string "contact_details"

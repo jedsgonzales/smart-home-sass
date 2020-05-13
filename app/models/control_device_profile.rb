@@ -16,4 +16,5 @@ class ControlDeviceProfile < ApplicationRecord
   def validate_if_has_node_profiles
     self.errors.add(:base, 'node profiles are required') if self.control_node_profiles.empty?
   end
+
 end
