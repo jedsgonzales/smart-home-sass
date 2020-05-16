@@ -5,8 +5,8 @@ require 'automation/nodes/var_volt_control'
 require 'automation/nodes/vav'
 
 module Automation
-  module NodeList
-    MAP = {
+  module ApiNode
+    LIST = {
       'Default' => Automation::Nodes::Switch,
       'HVAC' => Automation::Nodes::Hvac,
       'Switch' => Automation::Nodes::Switch,

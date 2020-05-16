@@ -1,4 +1,4 @@
-require 'automation/node_list'
+require 'automation/api_node'
 
 class ControlNode < ApplicationRecord
   default_scope -> { order("created_at DESC") }
@@ -10,21 +10,23 @@ class ControlNode < ApplicationRecord
   has_many :node_statuses, foreign_key: :node_id
 
   before_save do |node|
-    node.known_type = device.control_node_profile.node_type
+    node.known_type = node.control_node_profile.node_type
   end
 
+  validates :control_channel, numericality: { only_integer: true, greater_than: 0 }, uniqueness: { scope: :device_id  }
+
   after_initialize do |node|
-    if control_node_profile.present?
-      if Automation::NodeList::MAP.has_key?(control_node_profile.node_type)
-        node.send(:extend, Automation::NodeList::MAP[control_node_profile.node_type])
+    if node.control_node_profile.present?
+      if Automation::ApiNode::LIST.has_key?(node.control_node_profile.node_type)
+        node.send(:extend, Automation::ApiNode::LIST[node.control_node_profile.node_type])
       else
         # default into relay
-        node.send(:extend, Automation::NodeList::MAP['Default'])
+        node.send(:extend, Automation::ApiNode::LIST['Default'])
       end
 
     else
       # fallback to last known_type
-      node.send(:extend, Automation::NodeList::MAP[node.known_type])
+      node.send(:extend, Automation::ApiNode::LIST[node.known_type])
     end
   end
 

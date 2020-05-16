@@ -1,3 +1,5 @@
+require 'automation/api'
+
 class ControlDeviceProfile < ApplicationRecord
   default_scope -> { order("created_at DESC") }
 
@@ -10,11 +12,15 @@ class ControlDeviceProfile < ApplicationRecord
   validates :model_code, presence: true
   validates :model_api, presence: true
 
-  validate :validate_if_has_node_profiles
+  validate :has_node_profiles, :model_api_is_valid
 
   private
-  def validate_if_has_node_profiles
+  def has_node_profiles
     self.errors.add(:base, 'node profiles are required') if self.control_node_profiles.empty?
+  end
+
+  def model_api_is_valid
+    self.errors.add(:model_api, 'invalid api identification') unless Automation::Api::LIST.has_key?(self.model_api)
   end
 
 end

@@ -54,8 +54,14 @@ module Automation
             end
           end
 
-          op_codes = Automation::Api::SmartG4::PACKET[:op_codes]
+          # drop processing failures
+          if message.content[1] != Automation::Api::SmartG4::PACKET[:failure]
+            # ignore for now
+            return false
+          end
 
+          # packet digestion router
+          op_codes = Automation::Api::SmartG4::PACKET[:op_codes]
           case message.op_code
             when op_codes[:relay][:power_crtl] # this command code
             when op_codes[:relay][:power_resp]
@@ -63,46 +69,45 @@ module Automation
             else
               # unknown
           end # case
+
+          return true
         end # receive
 
         def relay_power_resp(message)
-          if message.content[1] == Automation::Api::SmartG4::PACKET[:success]
-            ch_updates = { message.content[0] => message.content[2] } # record target channel
+          ch_updates = { message.content[0] => message.content[2] } # record target channel
 
-            # content byte 4 to 6
-            other_channel_stats = message.content[4, 3]
-            other_channel_stats.each_with_index do |set, index|
-              for i in 0..7
-                ch_num = i + (index * 8)
+          # content byte 4 to 6
+          other_channel_stats = message.content[4, 3]
+          other_channel_stats.each_with_index do |set, index|
+            for i in 0..7
+              ch_num = i + (index * 8)
 
-                if ch_num == message.content[0] # insert update unless orginal target
-                  ch_updates[ch_num] = ((set1 > i) & 1)
-                  mapped += 1
-                end
+              if ch_num == message.content[0] # insert update unless orginal target
+                ch_updates[ch_num] = ((set1 > i) & 1)
+                mapped += 1
               end
             end
+          end
 
-            # call channel updates
-            self.control_nodes.each do |control_node|
-              is_switch = control_node.is_a?(Automation::Nodes::Switch)
-              is_var_switch = control_node.is_a?(Automation::Nodes::VarVoltControl)
+          # call channel updates
+          self.control_nodes.each do |control_node|
+            is_switch = control_node.is_a?(Automation::Nodes::Switch)
+            is_var_switch = control_node.is_a?(Automation::Nodes::VarVoltControl)
 
-              if (is_switch || is_var_switch)
-                  && ch_updates.has_key?(control_node.control_channel)
+            if ((is_switch || is_var_switch) &&
+                ch_updates.has_key?(control_node.control_channel))
 
-                power_status = ch_updates[control_node.control_channel]
+              power_status = ch_updates[control_node.control_channel]
 
-                if message.content[0] == control_node.control_channel || is_switch
-                  # absolute update because this is the target
-                  control_node.node_status_power = power_status
-                else # is_var_switch
-                  # a little doubt because other updates are only flags if it is on or off (1 or 0)
-                  # take over with highest value if powered on
-                  control_node.node_status_power = ((power_status > 0) && (control_node.node_status_power > power_status)) ? control_node.node_status_power : power_status
-                end
+              if message.content[0] == control_node.control_channel || is_switch
+                # absolute update because this is the target
+                control_node.node_status_power = power_status
+              else # is_var_switch
+                # a little doubt because other updates are only flags if it is on or off (1 or 0)
+                # take over with highest value if powered on
+                control_node.node_status_power = ((power_status > 0) && (control_node.node_status_power > power_status)) ? control_node.node_status_power : power_status
               end
             end
-
           end
         end # relay_power_resp
       end

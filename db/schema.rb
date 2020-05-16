@@ -57,6 +57,7 @@ ActiveRecord::Schema.define(version: 2020_28_04_151124) do
     t.bigint "user_id", default: 0
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.integer "control_channel"
   end
 
   create_table "control_nodes", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
