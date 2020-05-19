@@ -33,6 +33,34 @@ RSpec.describe Automation::Api::SmartG4::Message do
       expect(@sample1[:message]).not_to be_nil
     end
 
+    it 'has correct origin subnet id' do
+      expect(@sample1[:message].origin_subnet).to eql(0x01)
+    end
+
+    it 'has correct origin device id' do
+      expect(@sample1[:message].origin_device_id).to eql(0xFA)
+    end
+
+    it 'has correct origin device type' do
+      expect(@sample1[:message].origin_device_type).to eql([0xFF, 0xFE])
+    end
+
+    it 'has correct op code' do
+      expect(@sample1[:message].op_code).to eql([0x00, 0x31])
+    end
+
+    it 'has correct target subnet' do
+      expect(@sample1[:message].target_subnet).to eql(0x01)
+    end
+
+    it 'has correct target device id' do
+      expect(@sample1[:message].target_device_id).to eql(0x44)
+    end
+
+    it 'has correct contents' do
+      expect(@sample1[:message].content).to eql([0x01, 0x46, 0x00, 0x00])
+    end
+
     it 'can detect if message crc is valid' do
       expect(@sample1[:message].is_valid?).to be true
     end

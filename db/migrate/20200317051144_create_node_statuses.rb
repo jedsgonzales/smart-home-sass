@@ -5,7 +5,7 @@ class CreateNodeStatuses < ActiveRecord::Migration[6.0]
       t.string :name, null: false
       t.string :value, length: 16
       t.string :type
-
+ 
     end
   end
 end

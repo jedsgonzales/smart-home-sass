@@ -9,17 +9,36 @@ class ControlDevice < ApplicationRecord
   has_many      :control_nodes, foreign_key: :device_id, dependent: :destroy
 
   validates     :known_model_api, presence: true
+  validate      :validate_by_api
 
   after_initialize  :init_api_model_params, :inject_protocol_api
-  before_validation :set_last_knowns
+  before_validation :set_last_knowns, :inject_protocol_api
 
   private
+  # custom validations
+  def validate_by_api
+    if self.control_device_profile.present?
+      if Automation::Api::LIST.has_key?(self.control_device_profile.model_api)
+        Automation::Api::LIST[self.control_device_profile.model_api]::Validators.control_device(self)
+      else
+        Automation::Api::LIST[self.known_model_api]::Validators.control_device(self) unless Automation::Api::LIST[self.known_model_api].nil?
+      end
+
+    else
+      # fallback to last known_type
+      Automation::Api::LIST[self.known_model_api]::Validators.control_device(self) unless Automation::Api::LIST[self.known_model_api].nil?
+    end
+  end
+  # end custom validations
+
+  ######################
+
+  # start hooks
   def init_api_model_params
     self.api_model_params ||= { device_id: 1, subnet_id: 1, device_type: 1 }
   end
 
   def inject_protocol_api
-
     if self.control_device_profile.present?
       if Automation::Api::LIST.has_key?(self.control_device_profile.model_api)
         self.send(:extend, Automation::Api::LIST[self.control_device_profile.model_api])
@@ -31,6 +50,7 @@ class ControlDevice < ApplicationRecord
       # fallback to last known_type
       self.send(:extend, Automation::Api::LIST[self.known_model_api]) unless self.known_model_api.blank?
     end
+
   end
 
   def set_last_knowns
@@ -48,5 +68,6 @@ class ControlDevice < ApplicationRecord
       end
     end
   end
+  # end hooks
 
 end

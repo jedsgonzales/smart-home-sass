@@ -180,6 +180,14 @@ module Automation
           !!@is_valid
         end
 
+        def op_code_val
+          @op_code.collect{ |d| d.to_s(16) }.join('').to_i(16)
+        end
+
+        def origin_device_type_val
+          @origin_device_type.collect{ |d| d.to_s(16) }.join('').to_i(16)
+        end
+
         # returns array of int values representing the bytes of packet
         def complete
           PACKET[:lead_code] +

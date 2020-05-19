@@ -36,8 +36,8 @@ module Automation
             raise Exception.new "Does not implement api_model_params accessor"
           end
 
-          if (self.api_model_params[:device_id] != message.origin_device_id ||
-              self.api_model_params[:subnet_id] != message.origin_subnet)
+          if (self.api_model_params["device_id"] != message.origin_device_id ||
+              self.api_model_params["subnet_id"] != message.origin_subnet)
               # message not for this device
               return false
           end
@@ -54,15 +54,9 @@ module Automation
             end
           end
 
-          # drop processing failures
-          if message.content[1] != Automation::Api::SmartG4::PACKET[:failure]
-            # ignore for now
-            return false
-          end
-
           # packet digestion router
           op_codes = Automation::Api::SmartG4::PACKET[:op_codes]
-          case message.op_code
+          case message.op_code_val
             when op_codes[:relay][:power_crtl] # this command code
             when op_codes[:relay][:power_resp]
               relay_power_resp(message)
@@ -74,17 +68,22 @@ module Automation
         end # receive
 
         def relay_power_resp(message)
+          # drop processing failures
+          if message.content[1] == Automation::Api::SmartG4::PACKET[:failure]
+            # ignore for now
+            return false
+          end
+
           ch_updates = { message.content[0] => message.content[2] } # record target channel
 
           # content byte 4 to 6
           other_channel_stats = message.content[4, 3]
           other_channel_stats.each_with_index do |set, index|
             for i in 0..7
-              ch_num = i + (index * 8)
+              ch_num = i + (index * 8) + 1
 
-              if ch_num == message.content[0] # insert update unless orginal target
-                ch_updates[ch_num] = ((set1 > i) & 1)
-                mapped += 1
+              if ch_num != message.content[0] # insert update unless orginal target
+                ch_updates[ch_num] = ((set >> i) & 1)
               end
             end
           end
@@ -110,6 +109,17 @@ module Automation
             end
           end
         end # relay_power_resp
+
+        # API Validators
+        module Validators
+          def self.control_device(device)
+
+            device.errors.add(:base, 'Subnet ID is required.') if device.api_model_params["subnet_id"].blank? || device.api_model_params["subnet_id"] == 0
+            device.errors.add(:base, 'Device ID is required.') if device.api_model_params["device_id"].blank? || device.api_model_params["device_id"] == 0
+            device.errors.add(:base, 'Device Type Code is required.') if device.api_model_params["device_type"].blank? || device.api_model_params["device_type"] == 0
+          end
+        end
+        # /API Validators
       end
     end
   end
