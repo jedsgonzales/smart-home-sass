@@ -9,7 +9,7 @@ module Automation
         create_stat_accessors(klass, stats_attr)
       end
 
-      def create_callbacks(klass, info_attr_str, stats_attr_str)
+      def create_callbacks(klass, info_attr_str, stats_attr_str, stats_names_str = '')
         if klass.class.ancestors.include?(ActiveRecord::Base)
           klass.instance_eval <<-METHOD
             def self.before_save(node)
@@ -21,6 +21,12 @@ module Automation
           klass.instance_eval("self.load_node_data( (#{info_attr_str} + #{stats_attr_str}.keys).uniq )")
           klass.instance_eval("self.node_status_ref = #{stats_attr_str}")
 
+          if stats_names_str.blank?
+            klass.instance_eval("self.node_status_names = {}")
+          else
+            klass.instance_eval("self.node_status_names = #{stats_names_str}")
+          end
+
         end
       end
 
@@ -30,6 +36,8 @@ module Automation
         attrs.each do |attr_key, attr_vals|
           attr = attr_key.to_s
 
+          # create method accessors for status values
+          # invalid values are automatically rejected
           base.instance_eval <<-METHOD
             def node_status_#{attr}=(value)
               @node_status_#{attr} = value if node_status_ref.has_key?(:#{attr}) && node_status_ref[:#{attr}].include?(value)
@@ -38,6 +46,15 @@ module Automation
             def node_status_#{attr}
               @node_status_#{attr}
             end
+
+            def node_status_#{attr}_str
+              if node_status_names.has_key?(:#{attr}) && node_status_names[:#{attr}].has_key?(@node_status_#{attr})
+                node_status_names[:#{attr}][@node_status_#{attr}]
+              else
+                @node_status_#{attr}
+              end
+            end
+
           METHOD
         end
       end
@@ -52,7 +69,7 @@ module Automation
     module Node
       extend ActiveSupport::Concern
 
-      attr_accessor :node_data_keys
+      # attr_accessor :node_data_keys
 
       def node_status_ref
         @node_status_ref
@@ -60,6 +77,14 @@ module Automation
 
       def node_status_ref=(v)
         @node_status_ref = v
+      end
+
+      def node_status_names
+        @node_status_names || {}
+      end
+
+      def node_status_names=(v)
+        @node_status_names = v
       end
 
 

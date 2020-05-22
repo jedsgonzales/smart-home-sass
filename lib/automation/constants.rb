@@ -5,26 +5,28 @@ module Automation
     ZERO_TO_10 = (0..10).to_a
 
     POWER = {
-      off: 0,
-      on: 1
+      0 => 'off',
+      1 => 'on',
+      100 => 'on'
     }
 
     TEMP_MODE = {
-      cool: 1,
-      auto: 2,
-      heat: 3
+      0 => 'cool',
+      1 => 'heat',
+      2 => 'fan',
+      4 => 'dry'
     }
 
     FAN_MODE = {
-      auto: 0,
-      low: 1,
-      medium: 2,
-      high: 3
+      0 => 'auto',
+      1 => 'high',
+      2 => 'medium',
+      4 => 'low'
     }
 
     TEMP_UNIT = {
-      fahrenheit: 0,
-      celsius: 1
+      0 => 'celcius',
+      1 => 'fahrenheit'
     }
   end
 end

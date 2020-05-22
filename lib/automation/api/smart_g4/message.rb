@@ -53,6 +53,7 @@ module Automation
             if retrieve
                # watch out for size of data we are trying to retrieve, rest will be excess=
               if clean_packet.size < (msg_length + PACKET[:lead_code].size)
+                # puts "cleanpacket push #{content.to_s(16)}"
                 clean_packet.push(content)
               else
                 excess_from = index
@@ -72,6 +73,7 @@ module Automation
           # at this points it should contain the proper
           # base structure, if not empty
           unless clean_packet.empty?
+            #puts "clean packet #{clean_packet.collect{|d| d.to_s(16) }}"
             # are we able to obtain the whole size starting from lead code headers
             if clean_packet.size == (msg_length + PACKET[:lead_code].size)
               # set start index for retrieval
@@ -85,6 +87,9 @@ module Automation
                 origin_ip = ip if (ip =~ Resolv::IPv4::Regex)
               end
 
+              #puts "consume content #{clean_packet[(fld_idx + 9)..(clean_packet.size - 3)]}"
+              #puts "consume crc #{clean_packet[(clean_packet.size - 2), 2]}"
+
               message = Message.new(
                 origin_subnet: clean_packet[fld_idx + 1],
                 origin_device_id: clean_packet[fld_idx + 2],
@@ -92,7 +97,7 @@ module Automation
                 op_code: clean_packet[fld_idx + 5, 2],
                 target_subnet:  clean_packet[fld_idx + 7],
                 target_device_id:  clean_packet[fld_idx + 8],
-                content:  clean_packet[fld_idx + 9..(clean_packet.size - 3)],
+                content:  clean_packet[(fld_idx + 9)..(clean_packet.size - 3)],
                 crc: clean_packet[(clean_packet.size - 2), 2],
                 origin_ip: origin_ip
               )

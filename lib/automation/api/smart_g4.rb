@@ -52,7 +52,14 @@ module Automation
         op_codes: {
           relay: {
             power_crtl: 0x0031,
-            power_resp: 0x0032
+            power_resp: 0x0032,
+            read_channel_status: 0x0033,
+            resp_channel_status: 0x0034,
+            periodic_status: 0xEFFF
+          },
+          hvac: {
+            ctrl_cmd: 0x193A,
+            ctrl_resp: 0x193B
           }
         }
       }
